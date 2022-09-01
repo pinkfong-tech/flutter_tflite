@@ -1,0 +1,37 @@
+PODS:
+  - Flutter (1.0.0)
+  - flutter_super_resolution (0.0.1):
+    - Flutter
+    - TensorFlowLiteSwift
+  - TensorFlowLiteC (2.9.1):
+    - TensorFlowLiteC/Core (= 2.9.1)
+  - TensorFlowLiteC/Core (2.9.1)
+  - TensorFlowLiteSwift (2.9.1):
+    - TensorFlowLiteSwift/Core (= 2.9.1)
+  - TensorFlowLiteSwift/Core (2.9.1):
+    - TensorFlowLiteC (= 2.9.1)
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - flutter_super_resolution (from `.symlinks/plugins/flutter_super_resolution/ios`)
+
+SPEC REPOS:
+  trunk:
+    - TensorFlowLiteC
+    - TensorFlowLiteSwift
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  flutter_super_resolution:
+    :path: ".symlinks/plugins/flutter_super_resolution/ios"
+
+SPEC CHECKSUMS:
+  Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
+  flutter_super_resolution: 20c6b767b657bf1db43053eb9923c5abc0b6505c
+  TensorFlowLiteC: 0a765860195fae345ca7398e33b07c80104c4b61
+  TensorFlowLiteSwift: 0b584ad1fac27c0015609056a5ab4e7692bd1af3
+
+PODFILE CHECKSUM: 7143d9644c0750e817605eb42aeaf10da34752ed
+
+COCOAPODS: 1.11.3
