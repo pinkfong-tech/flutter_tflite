@@ -16,13 +16,13 @@ class MethodChannelFlutterSuperResolution
       String labels = "",
       int numThreads = 1,
       bool isAsset = true,
-      bool useGpuDelegate = false}) async {
+      String accelator = "cpu"}) async {
     await methodChannel.invokeMethod('setupModel', {
       "model": model,
       "labels": labels,
       "numThreads": numThreads,
       "isAsset": isAsset,
-      'useGpuDelegate': useGpuDelegate
+      'accelator': accelator
     });
   }
 

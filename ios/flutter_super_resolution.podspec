@@ -17,9 +17,6 @@ A new Flutter plugin project.
   s.dependency 'Flutter' 
   s.dependency 'TensorFlowLiteSwift/CoreML'
   s.dependency 'TensorFlowLiteSwift/Metal'
-  # s.ios.vendored_frameworks = 'TensorFlowLiteC.framework', 'TensorFlowLiteCMetal.framework'
-  # s.xcconfig = { 'OTHER_LDFLAGS' => '-framework TensorFlowLiteC -all_load -framework TensorFlowLiteCMetal -all_load', 
-  #                 'FRAMEWORK_SEARCH_PATHS' => '$(PROJECT_DIR)/../Frameworks' }
   s.platform = :ios, '12.0'
 
   # Flutter.framework does not contain a i386 slice.

@@ -1,7 +1,6 @@
 import Flutter
 import UIKit
 import TensorFlowLite
-
 import Accelerate
 import CoreImage
 
@@ -37,8 +36,6 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
         
         if (args["isAsset"] as! Bool) {
             key = (registrar?.lookupKey(forAsset: args["model"] as! String))!
-            print("key: ")
-            print(key)
             graph_path = Bundle.main.path(forResource: key, ofType: nil)!
         } else {
             graph_path = args["model"] as! String
@@ -49,27 +46,40 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
         var options = Interpreter.Options()
         options.threadCount = num_threads
         
-        let useBool: Bool = args["useGpuDelegate"] as! Bool
+        
+        let accelator: String = args["accelator"] as? String ?? "cpu"
+        
+        
         var delegates: [Delegate]
-        if useBool {
+        
+        switch accelator {
+        case "cpu":
+            delegates = []
+        case "gpu":
+            delegates = [MetalDelegate()]
+        case "npu":
             if let delegate = CoreMLDelegate() {
-                print("Using CoreML delegate")
                 delegates = [delegate]
             } else {
                 delegates = [MetalDelegate()]
-                print("Using Metal delegate")
+                print("not support Neural Engine. Using Metal api")
             }
-        } else {
+        default:
             delegates = []
         }
-        guard let interpreter = try? Interpreter(modelPath: graph_path, options: options, delegates: delegates) else {
-            return
+        
+        DispatchQueue.global().async{
+            guard let interpreter = try? Interpreter(modelPath: graph_path, options: options, delegates: delegates) else {
+                return
+            }
+            self.interpreter = interpreter
         }
-        self.interpreter = interpreter
+        
         result("Success")
     }
     
     func runModel(pixelBuffer: CVPixelBuffer) {
         
     }
+    
 }

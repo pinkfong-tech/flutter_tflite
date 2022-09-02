@@ -1,4 +1,6 @@
 PODS:
+  - camera_avfoundation (0.0.1):
+    - Flutter
   - Flutter (1.0.0)
   - flutter_super_resolution (0.0.1):
     - Flutter
@@ -21,6 +23,7 @@ PODS:
     - TensorFlowLiteSwift/Core (= 2.9.1)
 
 DEPENDENCIES:
+  - camera_avfoundation (from `.symlinks/plugins/camera_avfoundation/ios`)
   - Flutter (from `Flutter`)
   - flutter_super_resolution (from `.symlinks/plugins/flutter_super_resolution/ios`)
 
@@ -30,14 +33,17 @@ SPEC REPOS:
     - TensorFlowLiteSwift
 
 EXTERNAL SOURCES:
+  camera_avfoundation:
+    :path: ".symlinks/plugins/camera_avfoundation/ios"
   Flutter:
     :path: Flutter
   flutter_super_resolution:
     :path: ".symlinks/plugins/flutter_super_resolution/ios"
 
 SPEC CHECKSUMS:
+  camera_avfoundation: 07c77549ea54ad95d8581be86617c094a46280d9
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
-  flutter_super_resolution: 925ff0094be72b2c11e45e17a70f18f61d07a113
+  flutter_super_resolution: fffb10dd3181f977490c7b972269b38fa64af4c5
   TensorFlowLiteC: 0a765860195fae345ca7398e33b07c80104c4b61
   TensorFlowLiteSwift: 0b584ad1fac27c0015609056a5ab4e7692bd1af3
 

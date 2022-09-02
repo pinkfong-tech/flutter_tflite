@@ -6,14 +6,15 @@ class FlutterSuperResolution {
     String labels = "",
     int numThreads = 1,
     bool isAsset = true,
-    bool useGpuDelegate = false,
+    String accelator = "cpu",
   }) {
     return FlutterSuperResolutionPlatform.instance.setupModel(
-        model: model,
-        labels: labels,
-        numThreads: numThreads,
-        isAsset: isAsset,
-        useGpuDelegate: useGpuDelegate);
+      model: model,
+      labels: labels,
+      numThreads: numThreads,
+      isAsset: isAsset,
+      accelator: accelator,
+    );
   }
 
   Future<void> runModel() {
