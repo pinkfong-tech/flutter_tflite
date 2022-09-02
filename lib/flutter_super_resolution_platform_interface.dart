@@ -24,10 +24,6 @@ abstract class FlutterSuperResolutionPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<String?> getPlatformVersion() {
-    throw UnimplementedError('platformVersion() has not been implemented.');
-  }
-
   Future<void> setupModel(
       {required String model,
       String labels = "",

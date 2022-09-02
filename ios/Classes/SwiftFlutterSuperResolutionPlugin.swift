@@ -1,9 +1,7 @@
 import Flutter
 import UIKit
-//import TensorFlowLiteC
-//import TensorFlowLiteCMetal
 import TensorFlowLite
-import TensorFlowLiteCCoreML
+
 import Accelerate
 import CoreImage
 
@@ -39,33 +37,36 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
         
         if (args["isAsset"] as! Bool) {
             key = (registrar?.lookupKey(forAsset: args["model"] as! String))!
+            print("key: ")
+            print(key)
             graph_path = Bundle.main.path(forResource: key, ofType: nil)!
         } else {
             graph_path = args["model"] as! String
         }
         
-        var num_threads: Int = args["numThreads"] as! Int
+        let num_threads: Int = args["numThreads"] as! Int
         
         var options = Interpreter.Options()
         options.threadCount = num_threads
         
         let useBool: Bool = args["useGpuDelegate"] as! Bool
-        let delegates: [CoreMLDelegate]
+        var delegates: [Delegate]
         if useBool {
             if let delegate = CoreMLDelegate() {
+                print("Using CoreML delegate")
                 delegates = [delegate]
             } else {
-                delegates = []
+                delegates = [MetalDelegate()]
+                print("Using Metal delegate")
             }
         } else {
             delegates = []
         }
         guard let interpreter = try? Interpreter(modelPath: graph_path, options: options, delegates: delegates) else {
-            return 
+            return
         }
-        
-        
-        
+        self.interpreter = interpreter
+        result("Success")
     }
     
     func runModel(pixelBuffer: CVPixelBuffer) {

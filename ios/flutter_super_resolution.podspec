@@ -3,7 +3,7 @@
 # Run `pod lib lint flutter_super_resolution.podspec` to validate before publishing.
 #
 Pod::Spec.new do |s|
-  s.name             = 'flutter_tflite'
+  s.name             = 'flutter_super_resolution'
   s.version          = '0.0.1'
   s.summary          = 'A new Flutter plugin project.'
   s.description      = <<-DESC
@@ -18,8 +18,8 @@ A new Flutter plugin project.
   s.dependency 'TensorFlowLiteSwift/CoreML'
   s.dependency 'TensorFlowLiteSwift/Metal'
   # s.ios.vendored_frameworks = 'TensorFlowLiteC.framework', 'TensorFlowLiteCMetal.framework'
-  s.xcconfig = { 'OTHER_LDFLAGS' => '-framework TensorFlowLiteC -all_load -framework TensorFlowLiteCMetal -all_load', 
-                  'FRAMEWORK_SEARCH_PATHS' => '$(PROJECT_DIR)/../Frameworks' }
+  # s.xcconfig = { 'OTHER_LDFLAGS' => '-framework TensorFlowLiteC -all_load -framework TensorFlowLiteCMetal -all_load', 
+  #                 'FRAMEWORK_SEARCH_PATHS' => '$(PROJECT_DIR)/../Frameworks' }
   s.platform = :ios, '12.0'
 
   # Flutter.framework does not contain a i386 slice.

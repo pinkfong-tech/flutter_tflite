@@ -1,10 +1,6 @@
 import 'flutter_super_resolution_platform_interface.dart';
 
 class FlutterSuperResolution {
-  Future<String?> getPlatformVersion() {
-    return FlutterSuperResolutionPlatform.instance.getPlatformVersion();
-  }
-
   Future<void> setupModel({
     required String model,
     String labels = "",
