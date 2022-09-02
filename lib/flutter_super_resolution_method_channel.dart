@@ -8,7 +8,7 @@ class MethodChannelFlutterSuperResolution
     extends FlutterSuperResolutionPlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
-  final methodChannel = const MethodChannel('flutter_super_resolution');
+  final methodChannel = const MethodChannel('flutter_tflite');
 
   @override
   Future<String?> getPlatformVersion() async {

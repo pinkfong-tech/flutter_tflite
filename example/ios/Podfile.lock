@@ -2,14 +2,23 @@ PODS:
   - Flutter (1.0.0)
   - flutter_super_resolution (0.0.1):
     - Flutter
-    - TensorFlowLiteSwift
+    - TensorFlowLiteSwift/CoreML
+    - TensorFlowLiteSwift/Metal
   - TensorFlowLiteC (2.9.1):
     - TensorFlowLiteC/Core (= 2.9.1)
   - TensorFlowLiteC/Core (2.9.1)
-  - TensorFlowLiteSwift (2.9.1):
-    - TensorFlowLiteSwift/Core (= 2.9.1)
+  - TensorFlowLiteC/CoreML (2.9.1):
+    - TensorFlowLiteC/Core
+  - TensorFlowLiteC/Metal (2.9.1):
+    - TensorFlowLiteC/Core
   - TensorFlowLiteSwift/Core (2.9.1):
     - TensorFlowLiteC (= 2.9.1)
+  - TensorFlowLiteSwift/CoreML (2.9.1):
+    - TensorFlowLiteC/CoreML (= 2.9.1)
+    - TensorFlowLiteSwift/Core (= 2.9.1)
+  - TensorFlowLiteSwift/Metal (2.9.1):
+    - TensorFlowLiteC/Metal (= 2.9.1)
+    - TensorFlowLiteSwift/Core (= 2.9.1)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
@@ -28,10 +37,10 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
-  flutter_super_resolution: 20c6b767b657bf1db43053eb9923c5abc0b6505c
+  flutter_super_resolution: 73a7d700d8e29250877794e88fa1030e986e3cd0
   TensorFlowLiteC: 0a765860195fae345ca7398e33b07c80104c4b61
   TensorFlowLiteSwift: 0b584ad1fac27c0015609056a5ab4e7692bd1af3
 
-PODFILE CHECKSUM: 7143d9644c0750e817605eb42aeaf10da34752ed
+PODFILE CHECKSUM: 33e4e75acbc5dbfd918e2c96aea42f4a15f05444
 
 COCOAPODS: 1.11.3

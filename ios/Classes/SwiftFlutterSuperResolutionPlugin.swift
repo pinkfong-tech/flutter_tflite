@@ -1,17 +1,20 @@
 import Flutter
 import UIKit
+//import TensorFlowLiteC
+//import TensorFlowLiteCMetal
 import TensorFlowLite
+import TensorFlowLiteCCoreML
 import Accelerate
+import CoreImage
 
 
 public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     private var interpreter: Interpreter!
-    private var modelName = "lite-model_esrgan-tf2_1"
     var registrar: FlutterPluginRegistrar? = nil
     
     
     public static func register(with registrar: FlutterPluginRegistrar) {
-        let channel = FlutterMethodChannel(name: "flutter_super_resolution", binaryMessenger: registrar.messenger())
+        let channel = FlutterMethodChannel(name: "flutter_tflite", binaryMessenger: registrar.messenger())
         let instance = SwiftFlutterSuperResolutionPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
         instance.registrar = registrar
@@ -42,19 +45,30 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
         }
         
         var num_threads: Int = args["numThreads"] as! Int
-
+        
         var options = Interpreter.Options()
         options.threadCount = num_threads
         
-        if let useGpuDelegate = args["useGpuDelegate"] as? Bool {
-            delegate = Interpreter.de
+        let useBool: Bool = args["useGpuDelegate"] as! Bool
+        let delegates: [CoreMLDelegate]
+        if useBool {
+            if let delegate = CoreMLDelegate() {
+                delegates = [delegate]
+            } else {
+                delegates = []
+            }
+        } else {
+            delegates = []
+        }
+        guard let interpreter = try? Interpreter(modelPath: graph_path, options: options, delegates: delegates) else {
+            return 
         }
         
         
+        
+    }
     
     func runModel(pixelBuffer: CVPixelBuffer) {
         
     }
-    
-    
 }
