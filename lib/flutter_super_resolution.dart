@@ -6,14 +6,14 @@ class FlutterSuperResolution {
     String labels = "",
     int numThreads = 1,
     bool isAsset = true,
-    String accelator = "cpu",
+    String accelerator = "cpu",
   }) {
     return FlutterSuperResolutionPlatform.instance.setupModel(
       model: model,
       labels: labels,
       numThreads: numThreads,
       isAsset: isAsset,
-      accelator: accelator,
+      accelerator: accelerator,
     );
   }
 

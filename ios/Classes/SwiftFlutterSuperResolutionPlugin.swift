@@ -47,12 +47,12 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
         options.threadCount = num_threads
         
         
-        let accelator: String = args["accelator"] as? String ?? "cpu"
+        let accelerator: String = args["accelerator"] as? String ?? "cpu"
         
         
         var delegates: [Delegate]
         
-        switch accelator {
+        switch accelerator {
         case "cpu":
             delegates = []
         case "gpu":

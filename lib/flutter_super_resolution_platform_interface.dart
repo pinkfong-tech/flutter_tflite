@@ -29,7 +29,7 @@ abstract class FlutterSuperResolutionPlatform extends PlatformInterface {
       String labels = "",
       int numThreads = 1,
       bool isAsset = true,
-      String accelator = "cpu"}) {
+      String accelerator = "cpu"}) {
     throw UnimplementedError('setupModel() has not been implemented.');
   }
 
