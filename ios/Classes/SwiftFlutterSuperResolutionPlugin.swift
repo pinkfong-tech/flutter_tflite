@@ -7,6 +7,7 @@ import CoreImage
 
 public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     private var interpreter: Interpreter!
+    private let label_string: [[Any]] = [[]]
     var registrar: FlutterPluginRegistrar? = nil
     
     
@@ -43,13 +44,34 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
         
         let num_threads: Int = args["numThreads"] as! Int
         
+        //      TFLite options
         var options = Interpreter.Options()
         options.threadCount = num_threads
-        
         
         let accelerator: String = args["accelerator"] as? String ?? "cpu"
         
         
+        createInterpreter(accelerator: accelerator, graph_path: graph_path, options: options)
+        
+        
+        let labels = args["labels"] as! NSString
+        
+        if (labels.length > 0) {
+            var label_path: String
+            
+            if (args["isAsset"] as! Bool) {
+                key = (registrar?.lookupKey(forAsset: labels as String))!
+                label_path = Bundle.main.path(forResource: key, ofType: nil)!
+            } else {
+                label_path = labels as String
+            }
+            
+            LoadLabel(label_path: label_path)
+        }
+        result("Success")
+    }
+    
+    func createInterpreter(accelerator: String, graph_path: String, options: Interpreter.Options ) {
         var delegates: [Delegate]
         
         switch accelerator {
@@ -74,9 +96,24 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
             }
             self.interpreter = interpreter
         }
-        
-        result("Success")
     }
+    
+    func LoadLabel(label_path: String) -> [[Any]] {
+        var label_string = [[Any]]()
+        if label_path.isEmpty {
+            print("Failed to find label file at \(label_path)")
+        }
+        let contents = try! String(contentsOfFile: label_path)
+        let lines = contents.split(separator: "\n")
+        
+        for line in lines {
+            label_string.append([line])
+        }
+        
+        return label_string
+        
+    }
+    
     
     func runModel(pixelBuffer: CVPixelBuffer) {
         

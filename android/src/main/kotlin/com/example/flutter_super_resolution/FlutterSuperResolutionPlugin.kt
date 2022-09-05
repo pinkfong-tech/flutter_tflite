@@ -1,6 +1,8 @@
 package com.example.flutter_super_resolution
 
+
 import android.content.res.AssetFileDescriptor
+import android.content.res.AssetManager
 import androidx.annotation.NonNull
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
@@ -9,21 +11,24 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.GpuDelegate
-import org.tensorflow.lite.nnapi.NnApiDelegate;
-import java.io.File
-import java.io.FileInputStream
+import org.tensorflow.lite.gpu.CompatibilityList
+import org.tensorflow.lite.nnapi.NnApiDelegate
+import org.tensorflow.lite.nnapi.NnApiDelegateImpl
+import java.io.*
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
+import java.util.*
 
 
 /** FlutterSuperResolutionPlugin */
 class FlutterSuperResolutionPlugin: FlutterPlugin, MethodCallHandler {
   private lateinit var channel : MethodChannel
-  private lateinit var interpreter: Interpreter
+  private lateinit var tflite: Interpreter
   private lateinit var binding: FlutterPlugin.FlutterPluginBinding
+  private var labelProb =  emptyArray<Float>()
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "flutter_super_resolution")
+    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "flutter_tflite")
     channel.setMethodCallHandler(this)
     binding = flutterPluginBinding
   }
@@ -37,15 +42,17 @@ class FlutterSuperResolutionPlugin: FlutterPlugin, MethodCallHandler {
     }
   }
 
-  private fun setupModel(result: Result, args: HashMap<String, *>) {
+  private fun setupModel(result: Result, args: HashMap<String, *>): String {
     val model: String = args["model"].toString()
     val isAssetObj = args["isAsset"]
     val isAsset = if (isAssetObj == null) false else isAssetObj as Boolean
-    val key: String
+    var key: String
     val buffer: MappedByteBuffer
+    var assetManager: AssetManager? = null
 
 
     if (isAsset) {
+      assetManager = binding.applicationContext.assets
       key = binding.flutterAssets.getAssetFilePathBySubpath(model)
       val fileDescriptor: AssetFileDescriptor = binding.applicationContext.assets.openFd(key)
       val inputStream: FileInputStream = FileInputStream(fileDescriptor.fileDescriptor)
@@ -60,18 +67,74 @@ class FlutterSuperResolutionPlugin: FlutterPlugin, MethodCallHandler {
       buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, declaredLength)
     }
 
-    val numThread = args["numThreads"]
+    val numThread: Int = args["numThreads"] as Int
+    val tfliteOption = selectDelegate(args["accelerator"] as String)
+    tfliteOption.numThreads = numThread
+
+    tflite = Interpreter(buffer, tfliteOption)
+
+    val label: String = args["labels"].toString()
+
+    if (label.isNotEmpty()) {
+      if (isAsset) {
+        key = binding.flutterAssets.getAssetFilePathBySubpath(label)
+        if (assetManager != null) {
+          loadLabels(assetManager, key)
+        }
+      } else {
+        loadLabels(null, label)
+      }
+    }
+    result.success("Success")
+    return "success"
+  }
+
+  private fun selectDelegate(accelerator: String): Interpreter.Options {
     val tfliteOptions = Interpreter.Options()
-    when (args["accelerator"] as String) {
+    when (accelerator) {
       "cpu" -> { }
       "gpu" -> {
-        val delegate = GpuDelegate()
-        tfliteOptions.addDelegate(delegate)
+        val compatList = CompatibilityList()
+        if (compatList.isDelegateSupportedOnThisDevice) {
+          val delegate = GpuDelegate()
+          tfliteOptions.addDelegate(delegate)
+        }
       }
       "npu" -> {
-        val delegate = NnApiDelegate()
-        tfliteOptions.addDelegate(delegate)
+        try {
+          val delegate = NnApiDelegate()
+          tfliteOptions.addDelegate(delegate)
+        }  catch (e: java.lang.RuntimeException) {
+          val compatList = CompatibilityList()
+          if (compatList.isDelegateSupportedOnThisDevice) {
+            val delegate = GpuDelegate()
+            tfliteOptions.addDelegate(delegate)
+          }
+        }
       }
+    }
+    return tfliteOptions
+  }
+
+
+  private fun loadLabels(assetManager: AssetManager?, labelPath: String) {
+    var br: BufferedReader
+    try {
+      if (assetManager != null) {
+        br = BufferedReader(InputStreamReader(assetManager.open(labelPath)))
+      } else {
+        br = BufferedReader(InputStreamReader(FileInputStream(File(labelPath))))
+      }
+      var line: String
+      val labels = Vector<Any>()
+
+      while ( (br.readLine().also { line = it }) != null) {
+        labels.add(line)
+      }
+      labelProb = Array(1) { labels.size as Float }
+      br.close()
+    } catch (e: IOException) {
+      throw RuntimeException("Failed to read label file", e)
     }
   }
 
