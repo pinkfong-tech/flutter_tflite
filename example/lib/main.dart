@@ -30,6 +30,7 @@ class _MyAppState extends State<MyApp> {
     await _flutterSuperResolutionPlugin.setupModel(
       model: "assets/lite-model_esrgan-tf2_1.tflite",
       accelerator: "npu",
+      numThreads: 2,
     );
   }
 

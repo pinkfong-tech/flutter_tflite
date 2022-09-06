@@ -92,7 +92,7 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
             delegates = []
         }
         
-        DispatchQueue.global().async{
+        DispatchQueue.global(qos: .background).async{
             guard let interpreter = try? Interpreter(modelPath: graph_path, options: options, delegates: delegates) else {
                 return
             }
@@ -117,8 +117,61 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     }
     
     
-    func runModel() {
-        
+    func runModel(image: UIImage, completion: @escaping ( (Result<String>) -> ())) {
+        interpreter_busy = true
+        DispatchQueue.global(qos: .background).async{
+            let outputTensor: Tensor
+            
+            do {
+                try self.interpreter.allocateTensors()
+                let inputShape = try self.interpreter.input(at: 0).shape
+                let inputWidth = inputShape.dimensions[1]
+                let inputHeight = inputShape.dimensions[2]
+                
+                guard let rgbData = image.scaledData(with: CGSize(width: inputWidth, height: inputHeight))
+                else {
+                    DispatchQueue.main.async {
+                        completion(.error(ClassificationError.invalidImage))
+                    }
+                    print("Failed to convert the image buffer to RGB data.")
+                    return
+                }
+                
+                try self.interpreter.copy(rgbData, toInputAt: 0)
+                try self.interpreter.invoke()
+                
+                outputTensor = try self.interpreter.output(at: 0)
+                
+                
+            } catch let error {
+                print("Failed to invoke the interpreter with error: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    completion(.error(ClassificationError.internalError(error)))
+                }
+                return
+            }
+            let results = outputTensor.data.toArray(type: Float32.self)
+            let maxConfidence = results.max() ?? -1
+            let maxIndex = results.firstIndex(of: maxConfidence) ?? -1
+            let humanReadableResult = "Predicted: \(maxIndex)\nConfidence: \(maxConfidence)"
+            
+            DispatchQueue.main.async {
+                completion(.success(humanReadableResult))
+            }
+        }
     }
     
 }
+
+enum Result<T> {
+    case success(T)
+    case error(Error)
+}
+
+enum ClassificationError: Error {
+    // Invalid input image
+    case invalidImage
+    // TF Lite Internal Error when initializing
+    case internalError(Error)
+}
+
