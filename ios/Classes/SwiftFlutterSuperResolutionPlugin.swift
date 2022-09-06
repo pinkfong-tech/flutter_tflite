@@ -7,7 +7,9 @@ import CoreImage
 
 public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     private var interpreter: Interpreter!
-    private let label_string: [[Any]] = [[]]
+    private var label_string: [[Any]] = [[]]
+    private var interpreter_busy = false
+    
     var registrar: FlutterPluginRegistrar? = nil
     
     
@@ -66,7 +68,7 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
                 label_path = labels as String
             }
             
-            LoadLabel(label_path: label_path)
+            label_string = LoadLabel(label_path: label_path)
         }
         result("Success")
     }
@@ -115,7 +117,7 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     }
     
     
-    func runModel(pixelBuffer: CVPixelBuffer) {
+    func runModel() {
         
     }
     
