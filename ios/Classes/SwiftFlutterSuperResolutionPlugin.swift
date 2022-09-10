@@ -9,6 +9,7 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     private var interpreter: Interpreter!
     private var label_string: [[Any]] = [[]]
     private var interpreter_busy = false
+    private var result: Array<Any> = []
     
     var registrar: FlutterPluginRegistrar? = nil
     
@@ -118,7 +119,6 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     
     
     func runModel(image: UIImage, completion: @escaping ( (Result<String>) -> ())) {
-        interpreter_busy = true
         DispatchQueue.global(qos: .background).async{
             let outputTensor: Tensor
             
@@ -151,6 +151,7 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
                 return
             }
             let results = outputTensor.data.toArray(type: Float32.self)
+            self.result = results
             let maxConfidence = results.max() ?? -1
             let maxIndex = results.firstIndex(of: maxConfidence) ?? -1
             let humanReadableResult = "Predicted: \(maxIndex)\nConfidence: \(maxConfidence)"

@@ -3,21 +3,30 @@ package com.example.flutter_super_resolution
 
 import android.content.res.AssetFileDescriptor
 import android.content.res.AssetManager
+import android.graphics.Bitmap
 import androidx.annotation.NonNull
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+import org.checkerframework.checker.units.qual.min
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.GpuDelegate
 import org.tensorflow.lite.gpu.CompatibilityList
 import org.tensorflow.lite.nnapi.NnApiDelegate
-import org.tensorflow.lite.nnapi.NnApiDelegateImpl
+import org.tensorflow.lite.support.common.ops.NormalizeOp
+import org.tensorflow.lite.support.image.ImageProcessor
+import org.tensorflow.lite.support.image.TensorImage
+import org.tensorflow.lite.support.image.ops.ResizeOp
+import org.tensorflow.lite.support.image.ops.ResizeWithCropOrPadOp
+import org.tensorflow.lite.support.image.ops.Rot90Op
+import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import java.io.*
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.util.*
+import kotlin.math.min
 
 
 /** FlutterSuperResolutionPlugin */
@@ -26,6 +35,16 @@ class FlutterSuperResolutionPlugin: FlutterPlugin, MethodCallHandler {
   private lateinit var tflite: Interpreter
   private lateinit var binding: FlutterPlugin.FlutterPluginBinding
   private var labelProb =  emptyArray<Float>()
+  private lateinit var outputProbabilityBuffer:TensorBuffer
+  /** Image size along the x axis.  */
+  private val imageSizeX = 512
+
+  /** Image size along the y axis.  */
+  private val imageSizeY = 512
+
+  private val channelSize = 3
+  private val PROBABILITY_MEAN = 0.0f
+  private val PROBABILITY_STD = 1.0f
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "flutter_tflite")
@@ -72,6 +91,10 @@ class FlutterSuperResolutionPlugin: FlutterPlugin, MethodCallHandler {
     tfliteOption.numThreads = numThread
 
     tflite = Interpreter(buffer, tfliteOption)
+
+    outputProbabilityBuffer = TensorBuffer.createFixedSize(
+      tflite.getOutputTensor(0).shape(),
+      tflite.getOutputTensor(0).dataType())
 
     val label: String = args["labels"].toString()
 
@@ -136,6 +159,32 @@ class FlutterSuperResolutionPlugin: FlutterPlugin, MethodCallHandler {
     } catch (e: IOException) {
       throw RuntimeException("Failed to read label file", e)
     }
+  }
+
+  private fun runModel(bitmap: Bitmap,sensorOrientation: Int) {
+    val initialInputImageBuffer = TensorImage(tflite.getInputTensor(0).dataType())
+    val inputImageBuffer = loadImage(bitmap, sensorOrientation, initialInputImageBuffer )
+    tflite.run(inputImageBuffer?.buffer, outputProbabilityBuffer.buffer.rewind())
+  }
+
+  private fun loadImage(bitmap: Bitmap, sensorOrientation: Int, inputImageBuffer:TensorImage): TensorImage? {
+    // Loads bitmap into a TensorImage.
+
+    inputImageBuffer.load(bitmap)
+
+    // Creates processor for the TensorImage.
+    val cropSize = min(bitmap.width, bitmap.height)
+
+    val numRotation = sensorOrientation / 90
+
+    val imageProcessor: ImageProcessor = ImageProcessor.Builder()
+      .add(ResizeWithCropOrPadOp(cropSize, cropSize))
+      .add(ResizeOp(imageSizeX, imageSizeY, ResizeOp.ResizeMethod.NEAREST_NEIGHBOR))
+      .add(Rot90Op(numRotation))
+      .add(NormalizeOp(PROBABILITY_MEAN, PROBABILITY_STD))
+      .build()
+
+    return imageProcessor.process(inputImageBuffer)
   }
 
   override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
