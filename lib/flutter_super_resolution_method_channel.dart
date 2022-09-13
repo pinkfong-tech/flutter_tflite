@@ -14,7 +14,7 @@ class MethodChannelFlutterSuperResolution
   Future<void> setupModel(
       {required String model,
       String labels = "",
-      int numThreads = 1,
+      int numThreads = 2,
       bool isAsset = true,
       String accelerator = "cpu"}) async {
     await methodChannel.invokeMethod('setupModel', {
