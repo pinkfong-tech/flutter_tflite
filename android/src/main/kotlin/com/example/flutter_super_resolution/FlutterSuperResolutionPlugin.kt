@@ -10,7 +10,6 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import org.checkerframework.checker.units.qual.min
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.GpuDelegate
 import org.tensorflow.lite.gpu.CompatibilityList
@@ -34,7 +33,7 @@ class FlutterSuperResolutionPlugin: FlutterPlugin, MethodCallHandler {
   private lateinit var channel : MethodChannel
   private lateinit var tflite: Interpreter
   private lateinit var binding: FlutterPlugin.FlutterPluginBinding
-  private var labelProb =  emptyArray<Float>()
+  private var labels =  Vector<String>()
   private lateinit var outputProbabilityBuffer:TensorBuffer
   /** Image size along the x axis.  */
   private val imageSizeX = 512
@@ -142,26 +141,29 @@ class FlutterSuperResolutionPlugin: FlutterPlugin, MethodCallHandler {
 
   private fun loadLabels(assetManager: AssetManager?, labelPath: String) {
     var br: BufferedReader
+    var line: String?
+    val labels = Vector<String>()
     try {
-      if (assetManager != null) {
-        br = BufferedReader(InputStreamReader(assetManager.open(labelPath)))
+      br = if (assetManager != null) {
+        BufferedReader(InputStreamReader(assetManager.open(labelPath)))
       } else {
-        br = BufferedReader(InputStreamReader(FileInputStream(File(labelPath))))
+        BufferedReader(InputStreamReader(FileInputStream(File(labelPath))))
       }
-      var line: String
-      val labels = Vector<Any>()
+      while(true) {
+        line = br.readLine()
+        if (line == null)
+          break
+        else labels.add(line)
 
-      while ( (br.readLine().also { line = it }) != null) {
-        labels.add(line)
       }
-      labelProb = Array(1) { labels.size as Float }
       br.close()
+      this.labels = labels
     } catch (e: IOException) {
       throw RuntimeException("Failed to read label file", e)
     }
   }
 
-  private fun runModel(bitmap: Bitmap,sensorOrientation: Int) {
+  private fun runModel(bitmap: Bitmap, sensorOrientation: Int) {
     val initialInputImageBuffer = TensorImage(tflite.getInputTensor(0).dataType())
     val inputImageBuffer = loadImage(bitmap, sensorOrientation, initialInputImageBuffer )
     tflite.run(inputImageBuffer?.buffer, outputProbabilityBuffer.buffer.rewind())

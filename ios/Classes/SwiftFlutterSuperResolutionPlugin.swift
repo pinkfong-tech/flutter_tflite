@@ -7,7 +7,7 @@ import CoreImage
 
 public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     private var interpreter: Interpreter!
-    private var label_string: [[Any]] = [[]]
+    private var label_string: [Any] = []
     private var interpreter_busy = false
     private var result: Array<Any> = []
     
@@ -70,6 +70,7 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
             }
             
             label_string = LoadLabel(label_path: label_path)
+            print(label_string)
         }
         result("Success")
     }
@@ -101,8 +102,8 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
         }
     }
     
-    func LoadLabel(label_path: String) -> [[Any]] {
-        var label_string = [[Any]]()
+    func LoadLabel(label_path: String) -> [Any] {
+        var label_string = [Any]()
         if label_path.isEmpty {
             print("Failed to find label file at \(label_path)")
         }
@@ -110,7 +111,7 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
         let lines = contents.split(separator: "\n")
         
         for line in lines {
-            label_string.append([line])
+            label_string.append(line)
         }
         
         return label_string

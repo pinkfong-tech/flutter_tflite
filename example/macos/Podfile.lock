@@ -1,0 +1,22 @@
+PODS:
+  - flutter_super_resolution (0.0.1):
+    - FlutterMacOS
+  - FlutterMacOS (1.0.0)
+
+DEPENDENCIES:
+  - flutter_super_resolution (from `Flutter/ephemeral/.symlinks/plugins/flutter_super_resolution/macos`)
+  - FlutterMacOS (from `Flutter/ephemeral`)
+
+EXTERNAL SOURCES:
+  flutter_super_resolution:
+    :path: Flutter/ephemeral/.symlinks/plugins/flutter_super_resolution/macos
+  FlutterMacOS:
+    :path: Flutter/ephemeral
+
+SPEC CHECKSUMS:
+  flutter_super_resolution: dd0b465a2498bc32394d0918eb515a01a9a7b4f3
+  FlutterMacOS: ae6af50a8ea7d6103d888583d46bd8328a7e9811
+
+PODFILE CHECKSUM: 6eac6b3292e5142cfc23bdeb71848a40ec51c14c
+
+COCOAPODS: 1.11.3

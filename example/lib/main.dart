@@ -29,6 +29,8 @@ class _MyAppState extends State<MyApp> {
   Future<void> setupModel() async {
     await _flutterSuperResolutionPlugin.setupModel(
       model: "assets/lite-model_esrgan-tf2_1.tflite",
+      labels: "assets/mobilenet_v1_1.0_224.txt",
+      isAsset: true,
       accelerator: "npu",
       numThreads: 2,
     );
@@ -47,8 +49,8 @@ class _MyAppState extends State<MyApp> {
         ),
         body: Center(
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Running on: $_platformVersion\n'),
               ElevatedButton(
                 onPressed: () {
                   runModel();
