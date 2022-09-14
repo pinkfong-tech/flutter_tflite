@@ -38,12 +38,5 @@ for label in labels {
 }
 print(result)
 
-result.length
+result.
 
-let tensor = Tensor(
-  name: "input",
-  dataType: Float16,
-  shape: (512,512,3),
-  data: data,
-  quantizationParameters: quantizationParameters
-)
