@@ -27,7 +27,11 @@ class MethodChannelFlutterSuperResolution
   }
 
   @override
-  Future<void> runModel() async {
+  Future<List?> runModel(
+      {required Uint8List binary,
+      double threshold = 0.1,
+      bool asynch = true}) async {
     await methodChannel.invokeMethod('runModel');
+    return null;
   }
 }
