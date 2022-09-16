@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'flutter_super_resolution_platform_interface.dart';
 
 class FlutterSuperResolution {
@@ -17,7 +19,12 @@ class FlutterSuperResolution {
     );
   }
 
-  Future<void> runModel() {
-    return FlutterSuperResolutionPlatform.instance.runModel();
+  Future<List?> runModel(
+      {required Uint8List binary, double threshold = 0.1, bool asynch = true}) {
+    return FlutterSuperResolutionPlatform.instance.runModel(
+      binary: binary,
+      threshold: threshold,
+      asynch: asynch,
+    );
   }
 }

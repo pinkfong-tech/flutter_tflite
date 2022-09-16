@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'flutter_super_resolution_method_channel.dart';
@@ -33,7 +34,8 @@ abstract class FlutterSuperResolutionPlatform extends PlatformInterface {
     throw UnimplementedError('setupModel() has not been implemented.');
   }
 
-  Future<void> runModel() {
+  Future<List?> runModel(
+      {required Uint8List binary, double threshold = 0.1, bool asynch = true}) {
     throw UnimplementedError('runModel() has not been implemented.');
   }
 }

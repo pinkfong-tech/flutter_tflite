@@ -27,7 +27,14 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
             setupModel(result: result, args: call.arguments as! NSDictionary)
             break
         case "runModel":
-            
+            runModel(args: call.arguments as! NSDictionary) { result in
+                switch result {
+                case let .success(classificationResult):
+                    break
+                case .error(_):
+                    break
+                }
+            }
             break
         default:
             return
@@ -119,7 +126,11 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     }
     
     
-    func runModel(image: UIImage, completion: @escaping ( (Result<String>) -> ())) {
+    func runModel(args: NSDictionary, completion: @escaping ( (Result<String>) -> ())) {
+        var typedData: FlutterStandardTypedData = args["binary"] as! FlutterStandardTypedData
+        
+        let image = UIImage(data: typedData.data)!
+        
         DispatchQueue.global(qos: .background).async{
             let outputTensor: Tensor
             
@@ -162,7 +173,7 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
             }
         }
     }
-    
+
 }
 
 enum Result<T> {
