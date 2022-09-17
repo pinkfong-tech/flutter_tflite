@@ -27,14 +27,8 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
             setupModel(result: result, args: call.arguments as! NSDictionary)
             break
         case "runModel":
-            runModel(args: call.arguments as! NSDictionary) { result in
-                switch result {
-                case let .success(classificationResult):
-                    break
-                case .error(_):
-                    break
-                }
-            }
+            runModel(args: call.arguments as! NSDictionary, result: result)
+            
             break
         default:
             return
@@ -126,7 +120,7 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     }
     
     
-    func runModel(args: NSDictionary, completion: @escaping ( (Result<String>) -> ())) {
+    func runModel(args: NSDictionary, result: FlutterResult) {
         var typedData: FlutterStandardTypedData = args["binary"] as! FlutterStandardTypedData
         
         let image = UIImage(data: typedData.data)!
@@ -142,9 +136,6 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
                 
                 guard let rgbData = image.scaledData(with: CGSize(width: inputWidth, height: inputHeight))
                 else {
-                    DispatchQueue.main.async {
-                        completion(.error(ClassificationError.invalidImage))
-                    }
                     print("Failed to convert the image buffer to RGB data.")
                     return
                 }
@@ -157,9 +148,6 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
                 
             } catch let error {
                 print("Failed to invoke the interpreter with error: \(error.localizedDescription)")
-                DispatchQueue.main.async {
-                    completion(.error(ClassificationError.internalError(error)))
-                }
                 return
             }
             let results = outputTensor.data.toArray(type: Float32.self)
@@ -167,13 +155,11 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
             let maxConfidence = results.max() ?? -1
             let maxIndex = results.firstIndex(of: maxConfidence) ?? -1
             let humanReadableResult = "Predicted: \(maxIndex)\nConfidence: \(maxConfidence)"
-            
-            DispatchQueue.main.async {
-                completion(.success(humanReadableResult))
-            }
+ 
         }
+        result(self.result)
     }
-
+    
 }
 
 enum Result<T> {

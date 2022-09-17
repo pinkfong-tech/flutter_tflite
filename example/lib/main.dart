@@ -33,41 +33,11 @@ class _MyAppState extends State<MyApp> {
 
     if (image == null) return;
     setState(() {});
-    // predictImage(image);
   }
 
   @override
   void initState() {
     super.initState();
-    setupModel();
-  }
-
-  Future<void> setupModel() async {
-    await _flutterSuperResolutionPlugin.setupModel(
-      model: "assets/lite-model_esrgan-tf2_1.tflite",
-      isAsset: true,
-      accelerator: "npu",
-      numThreads: 2,
-    );
-  }
-
-  // Future<void> runModel() async {
-  //   await _flutterSuperResolutionPlugin.runModel();
-  // }
-
-  Uint8List imageToByteListUint8(img.Image image, int inputSize) {
-    var convertedBytes = Uint8List(1 * inputSize * inputSize * 3);
-    var buffer = Uint8List.view(convertedBytes.buffer);
-    int pixelIndex = 0;
-    for (var i = 0; i < inputSize; i++) {
-      for (var j = 0; j < inputSize; j++) {
-        var pixel = image.getPixel(j, i);
-        buffer[pixelIndex++] = img.getRed(pixel);
-        buffer[pixelIndex++] = img.getGreen(pixel);
-        buffer[pixelIndex++] = img.getBlue(pixel);
-      }
-    }
-    return convertedBytes.buffer.asUint8List();
   }
 
   @override
@@ -107,13 +77,12 @@ class _HomeState extends State<Home> {
   }
 
   Future predictImage(XFile image) async {
-    // Image.file(File(image.path));
     var fileImage = File(image.path);
     if (image == null) return;
 
     switch (_model) {
       case "real_esgan":
-        await RealESRGAN(fileImage);
+        _image = await RealESRGAN(fileImage);
         break;
       default:
         break;
@@ -183,11 +152,13 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
     List<Widget> stackChildren = [];
+
     stackChildren.add(Positioned(
       top: 0.0,
       left: 0.0,
-      width: MediaQuery.of(context).size.width,
+      width: size.width,
       child: _image == null
           ? const Text("No image selected.")
           : Container(
