@@ -22,19 +22,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final _flutterSuperResolutionPlugin = FlutterSuperResolution();
-
-  File? _image;
-  List _recognitions = [];
-  final ImagePicker _picker = ImagePicker();
-
-  Future<void> predictImagePicker() async {
-    var image = await _picker.pickImage(source: ImageSource.gallery);
-
-    if (image == null) return;
-    setState(() {});
-  }
-
   @override
   void initState() {
     super.initState();
