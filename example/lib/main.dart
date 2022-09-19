@@ -122,6 +122,38 @@ class _HomeState extends State<Home> {
     });
   }
 
+  Future recognizeImageBinary(File image) async {
+    int startTime = DateTime.now().millisecondsSinceEpoch;
+    var imageBytes = (await rootBundle.load(image.path)).buffer;
+    img.Image oriImage = img.decodeImage(imageBytes.asUint8List())!;
+    img.Image resizedImage = img.copyResize(oriImage, height: 224, width: 224);
+    var recognitions = await _flutterSuperResolutionPlugin.runModel(
+      binary: imageToByteListFloat32(resizedImage, 224, 127.5, 127.5),
+      threshold: 0.05,
+    );
+    setState(() {
+      _recognitions = recognitions;
+    });
+    int endTime = DateTime.now().millisecondsSinceEpoch;
+    print("Inference took ${endTime - startTime}ms");
+  }
+
+  Uint8List imageToByteListFloat32(
+      img.Image image, int inputSize, double mean, double std) {
+    var convertedBytes = Float32List(1 * inputSize * inputSize * 3);
+    var buffer = Float32List.view(convertedBytes.buffer);
+    int pixelIndex = 0;
+    for (var i = 0; i < inputSize; i++) {
+      for (var j = 0; j < inputSize; j++) {
+        var pixel = image.getPixel(j, i);
+        buffer[pixelIndex++] = (img.getRed(pixel) - mean) / std;
+        buffer[pixelIndex++] = (img.getGreen(pixel) - mean) / std;
+        buffer[pixelIndex++] = (img.getBlue(pixel) - mean) / std;
+      }
+    }
+    return convertedBytes.buffer.asUint8List();
+  }
+
   Uint8List imageToByteListUint8(img.Image image, int inputSize) {
     var convertedBytes = Uint8List(1 * inputSize * inputSize * 3);
     var buffer = Uint8List.view(convertedBytes.buffer);
@@ -149,12 +181,12 @@ class _HomeState extends State<Home> {
       child: _image == null
           ? const Text("No image selected.")
           : Container(
-              // decoration: BoxDecoration(
-              //   image: DecorationImage(
-              //       alignment: Alignment.topCenter,
-              //       image: MemoryImage(_recognitions),
-              //       fit: BoxFit.fill),
-              // ),
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                    alignment: Alignment.topCenter,
+                    image: MemoryImage(),
+                    fit: BoxFit.fill),
+              ),
               child: Opacity(
                 opacity: 0.3,
                 child: Image.file(_image!),
