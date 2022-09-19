@@ -161,7 +161,7 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     }
     
     func feedInputTensorBinary(typedData: FlutterStandardTypedData, input_size: Int) {
-        var in_data:[NSData] = [typedData]
+//        var in_data:[NSData] = [typedData]
     }
     
 }

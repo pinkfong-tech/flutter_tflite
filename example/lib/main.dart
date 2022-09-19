@@ -9,6 +9,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_super_resolution/flutter_super_resolution.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
+import 'package:logger/logger.dart';
+
+var logger = Logger(
+  printer: PrettyPrinter(),
+);
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -71,6 +76,12 @@ class _HomeState extends State<Home> {
     switch (_model) {
       case "real_esgan":
         _image = await RealESRGAN(fileImage);
+        break;
+      case "ssd_mobilenet":
+        // TODO : implement ssd_mobilenet
+        break;
+      case "yolo":
+        // TODO : implement ssd_mobilenet
         break;
       default:
         break;
@@ -136,7 +147,7 @@ class _HomeState extends State<Home> {
       _recognitions = recognitions!;
     });
     int endTime = DateTime.now().millisecondsSinceEpoch;
-    print("Inference took ${endTime - startTime}ms");
+    logger.d("Inference took ${endTime - startTime}ms");
   }
 
   Uint8List imageToByteListFloat32(
