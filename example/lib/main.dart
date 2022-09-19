@@ -1,5 +1,6 @@
 import 'dart:core';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -132,7 +133,7 @@ class _HomeState extends State<Home> {
       threshold: 0.05,
     );
     setState(() {
-      _recognitions = recognitions;
+      _recognitions = recognitions!;
     });
     int endTime = DateTime.now().millisecondsSinceEpoch;
     print("Inference took ${endTime - startTime}ms");
@@ -184,7 +185,7 @@ class _HomeState extends State<Home> {
               decoration: BoxDecoration(
                 image: DecorationImage(
                     alignment: Alignment.topCenter,
-                    image: MemoryImage(),
+                    image: MemoryImage(_recognitions as Uint8List),
                     fit: BoxFit.fill),
               ),
               child: Opacity(
