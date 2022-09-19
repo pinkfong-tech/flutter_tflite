@@ -38,4 +38,9 @@ abstract class FlutterSuperResolutionPlatform extends PlatformInterface {
       {required Uint8List binary, double threshold = 0.1, bool asynch = true}) {
     throw UnimplementedError('runModel() has not been implemented.');
   }
+
+  Future<List?> runModelOnFrame(
+      {required Uint8List binary, double threshold = 0.1, bool asynch = true}) {
+    throw UnimplementedError('runModelOnFrame() has not been implemented.');
+  }
 }

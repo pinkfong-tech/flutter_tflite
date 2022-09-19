@@ -1,3 +1,5 @@
+import 'dart:html';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -32,6 +34,15 @@ class MethodChannelFlutterSuperResolution
       double threshold = 0.1,
       bool asynch = true}) async {
     await methodChannel.invokeMethod('runModel');
+    return null;
+  }
+
+  @override
+  Future<List?> runModelOnFrame(
+      {required Uint8List binary,
+      double threshold = 0.1,
+      bool asynch = true}) async {
+    await methodChannel.invokeMethod('runModelOnFrame');
     return null;
   }
 }

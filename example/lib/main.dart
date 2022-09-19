@@ -134,6 +134,13 @@ class _HomeState extends State<Home> {
     });
   }
 
+  Future runModelonFrame() async {
+    await _flutterSuperResolutionPlugin.runModelOnFrame(
+      binary: _image!.readAsBytesSync(),
+      threshold: 0.4,
+    );
+  }
+
   Future recognizeImageBinary(File image) async {
     int startTime = DateTime.now().millisecondsSinceEpoch;
     var imageBytes = (await rootBundle.load(image.path)).buffer;
