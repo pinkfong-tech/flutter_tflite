@@ -212,6 +212,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.0"
+  logger:
+    dependency: "direct main"
+    description:
+      name: logger
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.1.0"
   matcher:
     dependency: transitive
     description:
@@ -316,7 +323,7 @@ packages:
     source: hosted
     version: "0.4.12"
   typed_data:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: typed_data
       url: "https://pub.dartlang.org"

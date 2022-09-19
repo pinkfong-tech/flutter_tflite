@@ -27,4 +27,13 @@ class FlutterSuperResolution {
       asynch: asynch,
     );
   }
+
+  Future<List?> runModelOnFrame(
+      {required Uint8List binary, double threshold = 0.1, bool asynch = true}) {
+    return FlutterSuperResolutionPlatform.instance.runModelOnFrame(
+      binary: binary,
+      threshold: threshold,
+      asynch: asynch,
+    );
+  }
 }
