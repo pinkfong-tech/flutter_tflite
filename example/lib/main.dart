@@ -2,6 +2,8 @@ import 'dart:core';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -15,13 +17,22 @@ var logger = Logger(
   printer: PrettyPrinter(),
 );
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+  try {
+    cameras = await availableCameras();
+  } on CameraException catch (e) {
+    logger.d(e.code, e.description);
+  }
+
+  runApp(MyApp(cameras: cameras));
 }
 
+List<CameraDescription> cameras = [];
+
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  final List<CameraDescription> cameras;
+  const MyApp({super.key, required this.cameras});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -35,14 +46,15 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Home(),
+    return MaterialApp(
+      home: Home(cameras: widget.cameras),
     );
   }
 }
 
 class Home extends StatefulWidget {
-  const Home({super.key});
+  final List<CameraDescription> cameras;
+  const Home({super.key, required this.cameras});
 
   @override
   State<Home> createState() => _HomeState();
@@ -50,14 +62,47 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final _flutterSuperResolutionPlugin = FlutterSuperResolution();
-
   File? _image;
-  List _recognitions = [];
+  late List _recognitions;
   final ImagePicker _picker = ImagePicker();
   bool _busy = false;
   late double _imageHeight;
   late double _imageWidth;
-  String _model = "real_esgan";
+  String _model = "yolo";
+
+  Future<void> setupModel() async {
+    switch (_model) {
+      case "real_esgan":
+        await _flutterSuperResolutionPlugin.setupModel(
+          model: "assets/lite-model_esrgan-tf2_1.tflite",
+          labels: "assets/mobilenet_v1_1.0_224.txt",
+          isAsset: true,
+          accelerator: "npu",
+          numThreads: 2,
+        );
+        break;
+      case "ssd_mobilenet":
+        await _flutterSuperResolutionPlugin.setupModel(
+          model: "assets/ssd_mobilenet.tflite",
+          labels: "assets/ssd_mobilenet.txt",
+          isAsset: true,
+          accelerator: "npu",
+          numThreads: 2,
+        );
+        break;
+      case "yolo":
+        await _flutterSuperResolutionPlugin.setupModel(
+          model: "assets/yolov2_tiny.tflite",
+          labels: "assets/yolov2_tiny.txt",
+          isAsset: true,
+          accelerator: "npu",
+          numThreads: 2,
+        );
+        break;
+      default:
+        break;
+    }
+  }
 
   Future predictImagePicker() async {
     var image = await _picker.pickImage(source: ImageSource.gallery);
@@ -109,21 +154,6 @@ class _HomeState extends State<Home> {
     setupModel();
   }
 
-  Future<void> setupModel() async {
-    await _flutterSuperResolutionPlugin.setupModel(
-      model: "assets/lite-model_esrgan-tf2_1.tflite",
-      labels: "assets/mobilenet_v1_1.0_224.txt",
-      isAsset: true,
-      accelerator: "npu",
-      numThreads: 2,
-    );
-  }
-
-  // Future<void> runModel() async {
-  //   await _flutterSuperResolutionPlugin.runModel();
-  // }
-
-  // ignore: non_constant_identifier_names
   Future RealESRGAN(File image) async {
     var recognitions = await _flutterSuperResolutionPlugin.runModel(
       binary: image.readAsBytesSync(),
