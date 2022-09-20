@@ -43,4 +43,39 @@ abstract class FlutterSuperResolutionPlatform extends PlatformInterface {
       {required Uint8List binary, double threshold = 0.1, bool asynch = true}) {
     throw UnimplementedError('runModelOnFrame() has not been implemented.');
   }
+
+  Future<List?> detectOnFrame({
+    required bytesList,
+    String model = "SSDMobileNet",
+    int imageHeight = 1280,
+    int imageWidth = 720,
+    double imageMean = 127.5,
+    double imageStd = 127.5,
+    double threshold = 0.1,
+    int numResultsPerClass = 1,
+    int rotation = 90, // Android only
+    required List anchors,
+    int blockSize = 32,
+    int numBoxesPerBlock = 5,
+    bool asynch = true,
+  }) {
+    throw UnimplementedError('detectOnFrame() has not been implemented.');
+  }
+
+  Future<List?> detectObjectOnFrame(
+      {required List<Uint8List> bytesList,
+      required String model,
+      required int imageHeight,
+      required int imageWidth,
+      required double imageMean,
+      required double imageStd,
+      required double threshold,
+      required int numResultsPerClass,
+      required int rotation,
+      required List anchors,
+      required int blockSize,
+      required int numBoxesPerBlock,
+      required bool asynch}) {
+    throw UnimplementedError('detectObjectOnFrame() has not been implemented.');
+  }
 }
