@@ -9,8 +9,9 @@ class BndBox extends StatelessWidget {
   final double screenW;
   final String model;
 
-  BndBox(this.results, this.previewH, this.previewW, this.screenH, this.screenW,
-      this.model);
+  const BndBox(this.results, this.previewH, this.previewW, this.screenH,
+      this.screenW, this.model,
+      {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -115,19 +116,17 @@ class BndBox extends StatelessWidget {
             top: y - 6,
             width: 100,
             height: 12,
-            child: Container(
-              child: Text(
-                "● ${k["part"]}",
-                style: const TextStyle(
-                  color: Color.fromRGBO(37, 213, 253, 1.0),
-                  fontSize: 12.0,
-                ),
+            child: Text(
+              "● ${k["part"]}",
+              style: const TextStyle(
+                color: Color.fromRGBO(37, 213, 253, 1.0),
+                fontSize: 12.0,
               ),
             ),
           );
         }).toList();
 
-        lists..addAll(list);
+        lists.addAll(list);
       });
 
       return lists;
