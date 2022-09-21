@@ -155,7 +155,7 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
             let maxConfidence = results.max() ?? -1
             let maxIndex = results.firstIndex(of: maxConfidence) ?? -1
             let humanReadableResult = "Predicted: \(maxIndex)\nConfidence: \(maxConfidence)"
- 
+            
         }
         result(self.result)
     }
