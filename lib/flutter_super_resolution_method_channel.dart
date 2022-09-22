@@ -45,4 +45,37 @@ class MethodChannelFlutterSuperResolution
     await methodChannel.invokeMethod('runModelOnFrame');
     return null;
   }
+
+  @override
+  Future<List?> detectObjectOnFrame({
+    required List<Uint8List> bytesList,
+    String model = "SSDMobileNet",
+    int imageHeight = 1280,
+    int imageWidth = 720,
+    double imageMean = 127.5,
+    double imageStd = 127.5,
+    double threshold = 0.1,
+    int numResultsPerClass = 1,
+    int rotation = 90, // Android only
+    // Used in YOLO only
+    required List anchors,
+    int blockSize = 32,
+    int numBoxesPerBlock = 5,
+    bool asynch = true,
+  }) async {
+    await methodChannel.invokeMethod("detectObjectOnFrame", {
+      "model": model,
+      "imageHeight": imageHeight,
+      "imageWidth": imageWidth,
+      "imageMean": imageMean,
+      "imageStd": imageStd,
+      "threshold": threshold,
+      "numResultsPerClass": numResultsPerClass,
+      "rotation": rotation,
+      "anchors": anchors,
+      "blockSize": blockSize,
+      "numBoxesPerBlock": numBoxesPerBlock,
+      "asynch": asynch,
+    });
+  }
 }

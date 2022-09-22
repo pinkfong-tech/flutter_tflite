@@ -166,6 +166,17 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
         
     }
     
+    func detectObjectOnFrame(arguments: NSDictionary, result: FlutterResult) {
+        if let args = arguments as? Dictionary<String, Any>,  let bytesList = args["bytesList"] as? FlutterStandardTypedData {
+            bytesList.data.withUnsafeBytes((pointer: UnsafeMutablePointer) in
+                                           
+            )
+        }
+        bytesList.data.toArray(type: Double.self)[0]
+        let typedData = bytesList.data.toArray(type: Double.self)[0]
+        
+    }
+    
 }
 
 enum Result<T> {
