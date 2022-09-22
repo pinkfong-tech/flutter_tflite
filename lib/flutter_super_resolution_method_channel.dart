@@ -33,8 +33,11 @@ class MethodChannelFlutterSuperResolution
       {required Uint8List binary,
       double threshold = 0.1,
       bool asynch = true}) async {
-    await methodChannel.invokeMethod('runModel');
-    return null;
+    return await methodChannel.invokeMethod('runModel', {
+      "binary": binary,
+      "threshold": threshold,
+      "asynch": asynch,
+    });
   }
 
   @override
@@ -42,8 +45,11 @@ class MethodChannelFlutterSuperResolution
       {required Uint8List binary,
       double threshold = 0.1,
       bool asynch = true}) async {
-    await methodChannel.invokeMethod('runModelOnFrame');
-    return null;
+    return await methodChannel.invokeMethod('runModelOnFrame', {
+      "binary": binary,
+      "threshold": threshold,
+      "asynch": asynch,
+    });
   }
 
   @override
@@ -63,7 +69,7 @@ class MethodChannelFlutterSuperResolution
     int numBoxesPerBlock = 5,
     bool asynch = true,
   }) async {
-    await methodChannel.invokeMethod("detectObjectOnFrame", {
+    return await methodChannel.invokeMethod("detectObjectOnFrame", {
       "model": model,
       "imageHeight": imageHeight,
       "imageWidth": imageWidth,

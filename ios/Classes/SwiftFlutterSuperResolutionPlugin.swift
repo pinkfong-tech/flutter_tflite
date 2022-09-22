@@ -167,13 +167,34 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     }
     
     func detectObjectOnFrame(arguments: NSDictionary, result: FlutterResult) {
-        if let args = arguments as? Dictionary<String, Any>,  let bytesList = args["bytesList"] as? FlutterStandardTypedData {
-            bytesList.data.withUnsafeBytes((pointer: UnsafeMutablePointer) in
-                                           
-            )
-        }
-        bytesList.data.toArray(type: Double.self)[0]
-        let typedData = bytesList.data.toArray(type: Double.self)[0]
+
+        let bytesList = arguments["bytesList"] as! FlutterStandardTypedData
+        let bytes = Data(bytesList.data)
+        let Uint8bytes = bytes.toArray(type: UInt8.self)
+        
+        let image_height = arguments["imageHeight"] as! Int
+        let image_width = arguments["imageWidth"] as! Int
+        let input_mean = arguments["imageMean"] as! Float
+        let input_std = arguments["imageStd"] as! Float
+        let threshold = arguments["threshold"] as! Float
+        let num_results_per_class = arguments["numResultsPerClass"] as! Int
+        
+        let anchors = arguments["anchors"] as! NSArray
+        let num_boxes_per_block = arguments["numBoxesPerBlock"] as! Int
+        let block_size = arguments["blockSize"] as! Float
+        
+        let image_channels: Int = 4
+        
+        feedInputTensorFrame(typeddata: Uint8bytes, image_height: image_height, image_width: image_width, image_channels: image_channels, input_mean: input_mean, input_std: input_std)
+        
+    }
+    
+    func feedInputTensor() {
+        
+    }
+    
+    
+    func feedInputTensorFrame(typeddata: [UInt8], image_height: Int, image_width: Int, image_channels: Int, input_mean: Float, input_std: Float) {
         
     }
     
