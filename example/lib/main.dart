@@ -26,8 +26,8 @@ void main() async {
   }
 
   await FlutterSuperResolution.instance.setupModel(
-    model: "assets/ssd_mobilenet.tflite",
-    labels: "assets/ssd_mobilenet.txt",
+    model: "assets/yolov2_tiny.tflite",
+    labels: "assets/yolov2_tiny.txt",
     isAsset: true,
     accelerator: "npu",
     numThreads: 2,
@@ -69,10 +69,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  File? _image;
   List _recognitions = [];
-  final ImagePicker _picker = ImagePicker();
-  bool _busy = false;
   int _imageHeight = 0;
   int _imageWidth = 0;
   String _model = "yolo";

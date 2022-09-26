@@ -10,6 +10,7 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     private var label_string: [Any] = []
     private var interpreter_busy = false
     private var result: Array<Any> = []
+    private var classifier: Model?
     
     var registrar: FlutterPluginRegistrar? = nil
     
@@ -47,6 +48,17 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
         
         let num_threads: Int = args["numThreads"] as! Int
         
+//        let dict = ["graph_path":graph_path, "num_threads": num_threads] as [String : Any]
+//        Model.newInstance(args: dict) { result in
+//            switch result {
+//            case let .success(result) :
+//                self.classifier = result
+//
+//            case .error(_):
+//                print("failure")
+//            }
+//        }
+        
         //      TFLite options
         var options = Interpreter.Options()
         options.threadCount = num_threads
@@ -76,6 +88,8 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     }
     
     func createInterpreter(accelerator: String, graph_path: String, options: Interpreter.Options ) {
+        
+        
         var delegates: [Delegate]
         
         switch accelerator {
@@ -94,20 +108,18 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
             delegates = []
         }
         
-        print(graph_path)
-        print(options)
-        
-//        DispatchQueue.global(qos: .background).async{
-//            guard let interpreter = try? Interpreter(modelPath: graph_path, options: options, delegates: delegates) else {
-//                print("not init interpreter")
-//                return
-//            }
-//
-//            self.interpreter = interpreter
-//        }
-        
-        self.interpreter = try? Interpreter(modelPath: graph_path, options: options, delegates: delegates)
-//        self.interpreter = interpreter
+        let interpreter = try? Interpreter(modelPath: graph_path, options: options, delegates: delegates)
+        DispatchQueue.global(qos: .background).async {
+            do {
+                let interpreter = try Interpreter(modelPath: graph_path, options: options, delegates: delegates)
+                
+                //                self.interpreter = interpreter
+                
+            } catch let error {
+                print("Failed to create the interpreter with error: \(error.localizedDescription)")
+            }
+            
+        }
     }
     
     func LoadLabel(label_path: String) -> [Any] {
@@ -128,12 +140,19 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     
     
     func runModel(args: NSDictionary, result: FlutterResult) {
-        let data = args["bytesList"] as! NSArray
-        guard let bytes = data[0] as? FlutterStandardTypedData else {
+        let rgbaPlan = args["bytesList"] as! NSArray
+        guard let rgbaTypedData = rgbaPlan[0] as? FlutterStandardTypedData else {
             return result(FlutterError.init())
         }
         
-        let image = UIImage(data: bytes.data)
+        
+        
+        let sourcePixelFormat = CVPixelBufferGetPixelFormatType(rgbaTypedData.data as! CVPixelBuffer)
+        let rgbaUint8 = [UInt8](rgbaTypedData.data)
+        let data = NSData(bytes: rgbaUint8, length: rgbaUint8.count)
+        
+        let image = UIImage(data: data as Data)
+        
         
         DispatchQueue.global(qos: .background).async{
             let outputTensor: Tensor
@@ -144,14 +163,16 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
                 let inputWidth = inputShape.dimensions[1]
                 let inputHeight = inputShape.dimensions[2]
                 
+                //                let resizedImage = self.resizeImage(image: image!, targetSize: CGSize(width: inputWidth, height: inputHeight))
+                //                let rgbData = resizedImage?.data
                 guard let rgbData = image?.scaledData(with: CGSize(width: inputWidth, height: inputHeight))
                 else {
                     print("Failed to convert the image buffer to RGB data.")
                     return
                 }
-                
-                try self.interpreter?.copy(rgbData, toInputAt: 0)
-                try self.interpreter?.invoke()
+                //                let rgbData = resizedImage.
+                try self.interpreter.copy(rgbData, toInputAt: 0)
+                try self.interpreter.invoke()
                 
                 outputTensor = try self.interpreter.output(at: 0)
                 
@@ -176,6 +197,33 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     //
     //
     //    }
+    
+    func resizeImage(image: UIImage, targetSize: CGSize) -> UIImage? {
+        let size = image.size
+        
+        let widthRatio  = targetSize.width  / size.width
+        let heightRatio = targetSize.height / size.height
+        
+        // Figure out what our orientation is, and use that to form the rectangle
+        var newSize: CGSize
+        if(widthRatio > heightRatio) {
+            newSize = CGSize(width: size.width * heightRatio, height: size.height * heightRatio)
+        } else {
+            newSize = CGSize(width: size.width * widthRatio, height: size.height * widthRatio)
+        }
+        
+        // This is the rect that we've calculated out and this is what is actually used below
+        let rect = CGRect(origin: .zero, size: newSize)
+        
+        // Actually do the resizing to the rect using the ImageContext stuff
+        UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
+        image.draw(in: rect)
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return newImage
+    }
+    
     
     func detectObjectOnFrame(arguments: NSDictionary, result: FlutterResult) {
         
@@ -209,17 +257,5 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
         
     }
     
-}
-
-enum Result<T> {
-    case success(T)
-    case error(Error)
-}
-
-enum ClassificationError: Error {
-    // Invalid input image
-    case invalidImage
-    // TF Lite Internal Error when initializing
-    case internalError(Error)
 }
 
