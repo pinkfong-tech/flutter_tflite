@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_super_resolution/flutter_super_resolution.dart';
@@ -23,7 +25,6 @@ class Camera extends StatefulWidget {
 }
 
 class _CameraState extends State<Camera> {
-  final _flutterSuperResolutionPlugin = FlutterSuperResolution();
   late CameraController controller;
   bool isDetecting = false;
 
@@ -37,7 +38,10 @@ class _CameraState extends State<Camera> {
       controller = CameraController(
         widget.cameras[0],
         ResolutionPreset.high,
+        imageFormatGroup: ImageFormatGroup.bgra8888,
+        // enableAudio: false,
       );
+
       controller.initialize().then((_) {
         if (!mounted) {
           return;
@@ -47,24 +51,20 @@ class _CameraState extends State<Camera> {
         controller.startImageStream((CameraImage img) {
           if (!isDetecting) {
             isDetecting = true;
-
-            int startTime = DateTime.now().millisecondsSinceEpoch;
-
-            _flutterSuperResolutionPlugin
+            FlutterSuperResolution.instance
                 .detectObjectOnFrame(
               bytesList: img.planes.map((plane) {
                 return plane.bytes;
               }).toList(),
               imageHeight: img.height,
               imageWidth: img.width,
-              numResultsPerClass: 5,
+              imageMean: 0,
+              imageStd: 255.0,
+              numResultsPerClass: 1,
+              threshold: 0.2,
             )
                 .then((recognitions) {
-              int endTime = DateTime.now().millisecondsSinceEpoch;
-              logger.d("Detection took ${endTime - startTime}");
-
               widget.setRecognitions(recognitions!, img.height, img.width);
-
               isDetecting = false;
             });
           }

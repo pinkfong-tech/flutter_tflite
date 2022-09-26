@@ -1,8 +1,12 @@
 import 'package:flutter/foundation.dart';
-
-import 'flutter_super_resolution_platform_interface.dart';
+import 'package:flutter/services.dart';
 
 class FlutterSuperResolution {
+  static const MethodChannel _channel = MethodChannel('flutter_tflite');
+
+  static final FlutterSuperResolution instance = FlutterSuperResolution._();
+  FlutterSuperResolution._();
+
   Future<void> setupModel({
     required String model,
     String labels = "",
@@ -10,31 +14,13 @@ class FlutterSuperResolution {
     bool isAsset = true,
     String accelerator = "cpu",
   }) {
-    return FlutterSuperResolutionPlatform.instance.setupModel(
-      model: model,
-      labels: labels,
-      numThreads: numThreads,
-      isAsset: isAsset,
-      accelerator: accelerator,
-    );
-  }
-
-  Future<List?> runModel(
-      {required Uint8List binary, double threshold = 0.1, bool asynch = true}) {
-    return FlutterSuperResolutionPlatform.instance.runModel(
-      binary: binary,
-      threshold: threshold,
-      asynch: asynch,
-    );
-  }
-
-  Future<List?> runModelOnFrame(
-      {required Uint8List binary, double threshold = 0.1, bool asynch = true}) {
-    return FlutterSuperResolutionPlatform.instance.runModelOnFrame(
-      binary: binary,
-      threshold: threshold,
-      asynch: asynch,
-    );
+    return _channel.invokeMethod('setupModel', {
+      "model": model,
+      "labels": labels,
+      "numThreads": numThreads,
+      "isAsset": isAsset,
+      "accelerator": accelerator,
+    });
   }
 
   static const anchors = [
@@ -66,20 +52,20 @@ class FlutterSuperResolution {
     int numBoxesPerBlock = 5,
     bool asynch = true,
   }) {
-    return FlutterSuperResolutionPlatform.instance.detectObjectOnFrame(
-      bytesList: bytesList,
-      model: model,
-      imageHeight: imageHeight,
-      imageWidth: imageWidth,
-      imageMean: imageMean,
-      imageStd: imageStd,
-      threshold: threshold,
-      numResultsPerClass: numResultsPerClass,
-      rotation: rotation,
-      anchors: anchors,
-      blockSize: blockSize,
-      numBoxesPerBlock: numBoxesPerBlock,
-      asynch: asynch,
-    );
+    return _channel.invokeMethod('runModel', {
+      "bytesList": bytesList,
+      "model": model,
+      "imageHeight": imageHeight,
+      "imageWidth": imageWidth,
+      "imageMean": imageMean,
+      "imageStd": imageStd,
+      "threshold": threshold,
+      "numResultsPerClass": numResultsPerClass,
+      "rotation": rotation,
+      "anchors": anchors,
+      "blockSize": blockSize,
+      "numBoxesPerBlock": numBoxesPerBlock,
+      "asynch": asynch,
+    });
   }
 }

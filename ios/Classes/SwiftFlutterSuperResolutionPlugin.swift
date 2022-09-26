@@ -10,6 +10,7 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     private var label_string: [Any] = []
     private var interpreter_busy = false
     private var result: Array<Any> = []
+    private var classifier: Model?
     
     var registrar: FlutterPluginRegistrar? = nil
     
@@ -24,18 +25,17 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method{
         case "setupModel":
-            setupModel(result: result, args: call.arguments as! NSDictionary)
+            setupModel(args: call.arguments as! NSDictionary, result: result)
             break
         case "runModel":
             runModel(args: call.arguments as! NSDictionary, result: result)
-            
             break
         default:
             return
         }
     }
     
-    func setupModel(result: FlutterResult, args: NSDictionary) {
+    func setupModel( args: NSDictionary, result: FlutterResult) {
         var graph_path: String
         var key: String
         
@@ -47,6 +47,17 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
         }
         
         let num_threads: Int = args["numThreads"] as! Int
+        
+//        let dict = ["graph_path":graph_path, "num_threads": num_threads] as [String : Any]
+//        Model.newInstance(args: dict) { result in
+//            switch result {
+//            case let .success(result) :
+//                self.classifier = result
+//
+//            case .error(_):
+//                print("failure")
+//            }
+//        }
         
         //      TFLite options
         var options = Interpreter.Options()
@@ -77,6 +88,8 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     }
     
     func createInterpreter(accelerator: String, graph_path: String, options: Interpreter.Options ) {
+        
+        
         var delegates: [Delegate]
         
         switch accelerator {
@@ -95,11 +108,17 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
             delegates = []
         }
         
-        DispatchQueue.global(qos: .background).async{
-            guard let interpreter = try? Interpreter(modelPath: graph_path, options: options, delegates: delegates) else {
-                return
+        let interpreter = try? Interpreter(modelPath: graph_path, options: options, delegates: delegates)
+        DispatchQueue.global(qos: .background).async {
+            do {
+                let interpreter = try Interpreter(modelPath: graph_path, options: options, delegates: delegates)
+                
+                //                self.interpreter = interpreter
+                
+            } catch let error {
+                print("Failed to create the interpreter with error: \(error.localizedDescription)")
             }
-            self.interpreter = interpreter
+            
         }
     }
     
@@ -121,9 +140,19 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     
     
     func runModel(args: NSDictionary, result: FlutterResult) {
-        var typedData: FlutterStandardTypedData = args["binary"] as! FlutterStandardTypedData
+        let rgbaPlan = args["bytesList"] as! NSArray
+        guard let rgbaTypedData = rgbaPlan[0] as? FlutterStandardTypedData else {
+            return result(FlutterError.init())
+        }
         
-        let image = UIImage(data: typedData.data)!
+        
+        
+        let sourcePixelFormat = CVPixelBufferGetPixelFormatType(rgbaTypedData.data as! CVPixelBuffer)
+        let rgbaUint8 = [UInt8](rgbaTypedData.data)
+        let data = NSData(bytes: rgbaUint8, length: rgbaUint8.count)
+        
+        let image = UIImage(data: data as Data)
+        
         
         DispatchQueue.global(qos: .background).async{
             let outputTensor: Tensor
@@ -134,12 +163,14 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
                 let inputWidth = inputShape.dimensions[1]
                 let inputHeight = inputShape.dimensions[2]
                 
-                guard let rgbData = image.scaledData(with: CGSize(width: inputWidth, height: inputHeight))
+                //                let resizedImage = self.resizeImage(image: image!, targetSize: CGSize(width: inputWidth, height: inputHeight))
+                //                let rgbData = resizedImage?.data
+                guard let rgbData = image?.scaledData(with: CGSize(width: inputWidth, height: inputHeight))
                 else {
                     print("Failed to convert the image buffer to RGB data.")
                     return
                 }
-                
+                //                let rgbData = resizedImage.
                 try self.interpreter.copy(rgbData, toInputAt: 0)
                 try self.interpreter.invoke()
                 
@@ -155,28 +186,76 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
             let maxConfidence = results.max() ?? -1
             let maxIndex = results.firstIndex(of: maxConfidence) ?? -1
             let humanReadableResult = "Predicted: \(maxIndex)\nConfidence: \(maxConfidence)"
- 
+            
         }
+        print(self.result)
         result(self.result)
     }
     
-    func feedInputTensorBinary(typedData: FlutterStandardTypedData, input_size: Int) {
-        var in_data:[NSData] = []
+    //    func feedInputTensorBinary(typedData: FlutterStandardTypedData, input_size: Int) {
+    //        var in_data:[NSData] = []
+    //
+    //
+    //    }
+    
+    func resizeImage(image: UIImage, targetSize: CGSize) -> UIImage? {
+        let size = image.size
         
+        let widthRatio  = targetSize.width  / size.width
+        let heightRatio = targetSize.height / size.height
+        
+        // Figure out what our orientation is, and use that to form the rectangle
+        var newSize: CGSize
+        if(widthRatio > heightRatio) {
+            newSize = CGSize(width: size.width * heightRatio, height: size.height * heightRatio)
+        } else {
+            newSize = CGSize(width: size.width * widthRatio, height: size.height * widthRatio)
+        }
+        
+        // This is the rect that we've calculated out and this is what is actually used below
+        let rect = CGRect(origin: .zero, size: newSize)
+        
+        // Actually do the resizing to the rect using the ImageContext stuff
+        UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
+        image.draw(in: rect)
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return newImage
+    }
+    
+    
+    func detectObjectOnFrame(arguments: NSDictionary, result: FlutterResult) {
+        
+        let bytesList = arguments["bytesList"] as! FlutterStandardTypedData
+        let bytes = Data(bytesList.data)
+        let Uint8bytes = bytes.toArray(type: UInt8.self)
+        
+        let image_height = arguments["imageHeight"] as! Int
+        let image_width = arguments["imageWidth"] as! Int
+        let input_mean = arguments["imageMean"] as! Float
+        let input_std = arguments["imageStd"] as! Float
+        let threshold = arguments["threshold"] as! Float
+        let num_results_per_class = arguments["numResultsPerClass"] as! Int
+        
+        let anchors = arguments["anchors"] as! NSArray
+        let num_boxes_per_block = arguments["numBoxesPerBlock"] as! Int
+        let block_size = arguments["blockSize"] as! Float
+        
+        let image_channels: Int = 4
+        
+        feedInputTensorFrame(typeddata: Uint8bytes, image_height: image_height, image_width: image_width, image_channels: image_channels, input_mean: input_mean, input_std: input_std)
         
     }
     
-}
-
-enum Result<T> {
-    case success(T)
-    case error(Error)
-}
-
-enum ClassificationError: Error {
-    // Invalid input image
-    case invalidImage
-    // TF Lite Internal Error when initializing
-    case internalError(Error)
+    func feedInputTensor() {
+        
+    }
+    
+    
+    func feedInputTensorFrame(typeddata: [UInt8], image_height: Int, image_width: Int, image_channels: Int, input_mean: Float, input_std: Float) {
+        
+    }
+    
 }
 
