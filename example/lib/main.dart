@@ -1,17 +1,14 @@
 import 'dart:core';
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:camera/camera.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_super_resolution/flutter_super_resolution.dart';
 import 'package:flutter_super_resolution_example/boundingbox.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:image/image.dart' as img;
 import 'package:logger/logger.dart';
 
 import 'camera.dart';
@@ -27,6 +24,14 @@ void main() async {
   } on CameraException catch (e) {
     logger.d(e.code, e.description);
   }
+
+  await FlutterSuperResolution.instance.setupModel(
+    model: "assets/ssd_mobilenet.tflite",
+    labels: "assets/ssd_mobilenet.txt",
+    isAsset: true,
+    accelerator: "npu",
+    numThreads: 2,
+  );
 
   runApp(MyApp(cameras: cameras));
 }
@@ -64,19 +69,18 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  final _flutterSuperResolutionPlugin = FlutterSuperResolution();
   File? _image;
-  late List _recognitions;
+  List _recognitions = [];
   final ImagePicker _picker = ImagePicker();
   bool _busy = false;
-  late int _imageHeight;
-  late int _imageWidth;
+  int _imageHeight = 0;
+  int _imageWidth = 0;
   String _model = "yolo";
 
   Future<void> setupModel() async {
     switch (_model) {
       case "real_esgan":
-        await _flutterSuperResolutionPlugin.setupModel(
+        await FlutterSuperResolution.instance.setupModel(
           model: "assets/lite-model_esrgan-tf2_1.tflite",
           labels: "assets/mobilenet_v1_1.0_224.txt",
           isAsset: true,
@@ -85,7 +89,7 @@ class _HomeState extends State<Home> {
         );
         break;
       case "ssd_mobilenet":
-        await _flutterSuperResolutionPlugin.setupModel(
+        await FlutterSuperResolution.instance.setupModel(
           model: "assets/ssd_mobilenet.tflite",
           labels: "assets/ssd_mobilenet.txt",
           isAsset: true,
@@ -94,7 +98,8 @@ class _HomeState extends State<Home> {
         );
         break;
       case "yolo":
-        await _flutterSuperResolutionPlugin.setupModel(
+        logger.d("setup yolo");
+        await FlutterSuperResolution.instance.setupModel(
           model: "assets/yolov2_tiny.tflite",
           labels: "assets/yolov2_tiny.txt",
           isAsset: true,
@@ -107,57 +112,9 @@ class _HomeState extends State<Home> {
     }
   }
 
-  Future predictImagePicker() async {
-    var image = await _picker.pickImage(source: ImageSource.gallery);
-
-    if (image == null) return;
-    setState(() {
-      _busy = true;
-    });
-    predictImage(image);
-  }
-
-  Future predictImage(XFile image) async {
-    var fileImage = File(image.path);
-    if (image == null) return;
-
-    switch (_model) {
-      case "real_esgan":
-        _image = await RealESRGAN(fileImage);
-        break;
-      case "ssd_mobilenet":
-        // TODO : implement ssd_mobilenet
-        break;
-      case "yolo":
-        // TODO : implement ssd_mobilenet
-        break;
-      default:
-        break;
-      // await recognizeImageBinary(image);
-    }
-  }
-
   @override
   void initState() {
     super.initState();
-    setupModel();
-  }
-
-  Future RealESRGAN(File image) async {
-    var recognitions = await _flutterSuperResolutionPlugin.runModel(
-      binary: image.readAsBytesSync(),
-      threshold: 0.4,
-    );
-    setState(() {
-      _recognitions = recognitions!;
-    });
-  }
-
-  Future runModelonFrame() async {
-    await _flutterSuperResolutionPlugin.runModelOnFrame(
-      binary: _image!.readAsBytesSync(),
-      threshold: 0.4,
-    );
   }
 
   setRecognitions(recognitions, imageHeight, imageWidth) {

@@ -24,18 +24,17 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method{
         case "setupModel":
-            setupModel(result: result, args: call.arguments as! NSDictionary)
+            setupModel(args: call.arguments as! NSDictionary, result: result)
             break
         case "runModel":
             runModel(args: call.arguments as! NSDictionary, result: result)
-            
             break
         default:
             return
         }
     }
     
-    func setupModel(result: FlutterResult, args: NSDictionary) {
+    func setupModel( args: NSDictionary, result: FlutterResult) {
         var graph_path: String
         var key: String
         
@@ -95,12 +94,20 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
             delegates = []
         }
         
-        DispatchQueue.global(qos: .background).async{
-            guard let interpreter = try? Interpreter(modelPath: graph_path, options: options, delegates: delegates) else {
-                return
-            }
-            self.interpreter = interpreter
-        }
+        print(graph_path)
+        print(options)
+        
+//        DispatchQueue.global(qos: .background).async{
+//            guard let interpreter = try? Interpreter(modelPath: graph_path, options: options, delegates: delegates) else {
+//                print("not init interpreter")
+//                return
+//            }
+//
+//            self.interpreter = interpreter
+//        }
+        
+        self.interpreter = try? Interpreter(modelPath: graph_path, options: options, delegates: delegates)
+//        self.interpreter = interpreter
     }
     
     func LoadLabel(label_path: String) -> [Any] {
@@ -121,9 +128,12 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
     
     
     func runModel(args: NSDictionary, result: FlutterResult) {
-        var typedData: FlutterStandardTypedData = args["binary"] as! FlutterStandardTypedData
+        let data = args["bytesList"] as! NSArray
+        guard let bytes = data[0] as? FlutterStandardTypedData else {
+            return result(FlutterError.init())
+        }
         
-        let image = UIImage(data: typedData.data)!
+        let image = UIImage(data: bytes.data)
         
         DispatchQueue.global(qos: .background).async{
             let outputTensor: Tensor
@@ -134,14 +144,14 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
                 let inputWidth = inputShape.dimensions[1]
                 let inputHeight = inputShape.dimensions[2]
                 
-                guard let rgbData = image.scaledData(with: CGSize(width: inputWidth, height: inputHeight))
+                guard let rgbData = image?.scaledData(with: CGSize(width: inputWidth, height: inputHeight))
                 else {
                     print("Failed to convert the image buffer to RGB data.")
                     return
                 }
                 
-                try self.interpreter.copy(rgbData, toInputAt: 0)
-                try self.interpreter.invoke()
+                try self.interpreter?.copy(rgbData, toInputAt: 0)
+                try self.interpreter?.invoke()
                 
                 outputTensor = try self.interpreter.output(at: 0)
                 
@@ -157,17 +167,18 @@ public class SwiftFlutterSuperResolutionPlugin: NSObject, FlutterPlugin {
             let humanReadableResult = "Predicted: \(maxIndex)\nConfidence: \(maxConfidence)"
             
         }
+        print(self.result)
         result(self.result)
     }
     
-    func feedInputTensorBinary(typedData: FlutterStandardTypedData, input_size: Int) {
-        var in_data:[NSData] = []
-        
-        
-    }
+    //    func feedInputTensorBinary(typedData: FlutterStandardTypedData, input_size: Int) {
+    //        var in_data:[NSData] = []
+    //
+    //
+    //    }
     
     func detectObjectOnFrame(arguments: NSDictionary, result: FlutterResult) {
-
+        
         let bytesList = arguments["bytesList"] as! FlutterStandardTypedData
         let bytes = Data(bytesList.data)
         let Uint8bytes = bytes.toArray(type: UInt8.self)

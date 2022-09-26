@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_super_resolution/flutter_super_resolution.dart';
@@ -23,12 +25,24 @@ class Camera extends StatefulWidget {
 }
 
 class _CameraState extends State<Camera> {
-  final _flutterSuperResolutionPlugin = FlutterSuperResolution();
   late CameraController controller;
   bool isDetecting = false;
 
+  static const anchors = [
+    0.57273,
+    0.677385,
+    1.87446,
+    2.06253,
+    3.33843,
+    5.47434,
+    7.88282,
+    3.52778,
+    9.77052,
+    9.16828
+  ];
+
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
 
     if (widget.cameras.isEmpty) {
@@ -37,7 +51,18 @@ class _CameraState extends State<Camera> {
       controller = CameraController(
         widget.cameras[0],
         ResolutionPreset.high,
+        imageFormatGroup: ImageFormatGroup.yuv420,
+        enableAudio: false,
       );
+
+      // await _flutterSuperResolutionPlugin.setupModel(
+      //   model: "assets/yolov2_tiny.tflite",
+      //   labels: "assets/yolov2_tiny.txt",
+      //   isAsset: true,
+      //   accelerator: "npu",
+      //   numThreads: 2,
+      // );
+
       controller.initialize().then((_) {
         if (!mounted) {
           return;
@@ -49,22 +74,22 @@ class _CameraState extends State<Camera> {
             isDetecting = true;
 
             int startTime = DateTime.now().millisecondsSinceEpoch;
-
-            _flutterSuperResolutionPlugin
+            FlutterSuperResolution.instance
                 .detectObjectOnFrame(
-              bytesList: img.planes.map((plane) {
-                return plane.bytes;
-              }).toList(),
-              imageHeight: img.height,
-              imageWidth: img.width,
-              numResultsPerClass: 5,
-            )
+                    bytesList: img.planes.map((plane) {
+                      return plane.bytes;
+                    }).toList(),
+                    imageHeight: img.height,
+                    imageWidth: img.width,
+                    imageMean: 0,
+                    imageStd: 255.0,
+                    numResultsPerClass: 1,
+                    threshold: 0.2,
+                    anchors: anchors)
                 .then((recognitions) {
+              logger.d(recognitions);
               int endTime = DateTime.now().millisecondsSinceEpoch;
-              logger.d("Detection took ${endTime - startTime}");
-
               widget.setRecognitions(recognitions!, img.height, img.width);
-
               isDetecting = false;
             });
           }
